@@ -1,7 +1,7 @@
 use std::path::Path;
 use sweet::KeyAttribute;
 use sweet::{Definition, SwhkdParser};
-use sweet::{ModeInstruction, ParseError};
+use sweet::{Instruction, ParseError};
 
 pub fn load(path: &Path) -> Result<Vec<Mode>, ParseError> {
     let config_self = sweet::SwhkdParser::from(sweet::ParserInput::Path(path))?;
@@ -77,8 +77,7 @@ impl Value for KeyBinding {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Hotkey {
     pub keybinding: KeyBinding,
-    pub command: String,
-    pub mode_instructions: Vec<ModeInstruction>,
+    pub instructions: Vec<Instruction>,
 }
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone, Hash)]
@@ -93,14 +92,13 @@ pub enum Modifier {
 
 impl Hotkey {
     pub fn from_keybinding(keybinding: KeyBinding, command: String) -> Self {
-        Hotkey { keybinding, command, mode_instructions: vec![] }
+        Hotkey { keybinding, instructions: vec![] }
     }
     #[cfg(test)]
     pub fn new(keysym: evdev::Key, modifiers: Vec<Modifier>, command: String) -> Self {
         Hotkey {
             keybinding: KeyBinding::new(keysym, modifiers),
-            command,
-            mode_instructions: vec![],
+            instructions: vec![],
         }
     }
 }
@@ -162,8 +160,7 @@ pub fn parse_contents(contents: SwhkdParser) -> Result<Vec<Mode>, ParseError> {
     for binding in &contents.bindings {
         default_mode.hotkeys.push(Hotkey {
             keybinding: sweet_def_to_kb(&binding.definition),
-            command: binding.command.clone(),
-            mode_instructions: binding.mode_instructions.clone(),
+            instructions: binding.instructions.clone(),
         });
     }
     for unbind in contents.unbinds {
@@ -178,8 +175,7 @@ pub fn parse_contents(contents: SwhkdParser) -> Result<Vec<Mode>, ParseError> {
         for binding in bindings {
             let hotkey = Hotkey {
                 keybinding: sweet_def_to_kb(&binding.definition),
-                command: binding.command,
-                mode_instructions: binding.mode_instructions.clone(),
+                instructions: binding.instructions.clone(),
             };
             pushmode.hotkeys.retain(|h| h.keybinding != hotkey.keybinding);
             pushmode.hotkeys.push(hotkey);

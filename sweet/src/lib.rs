@@ -99,8 +99,7 @@ impl SwhkdParser {
                 .iter_mut()
                 .find(|b| b.definition == binding.definition)
             {
-                b.command = binding.command;
-                b.mode_instructions = binding.mode_instructions;
+                b.instructions = binding.instructions;
                 continue;
             }
 
@@ -261,15 +260,21 @@ fn mode_parser(pair: Pair<'_, Rule>) -> Result<Mode, ParseError> {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ModeInstruction {
+pub enum Instruction {
+    Exec(String),
     Enter(String),
     Escape,
 }
 
+#[derive(Clone)]
+#[derive(Debug)]
+enum CommandFragment {
+    Command(String),
+    Instruction(Instruction),
+}
+
 fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
     let mut comm = vec![];
-    let mut mode_enters = vec![];
-    let mut mode_escapes = vec![];
     let mut uncompiled = DefinitionUncompiled::default();
     for component in pair.clone().into_inner() {
         match component.as_rule() {
@@ -277,40 +282,53 @@ fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
                 for subcomponent in component.into_inner() {
                     match subcomponent.as_rule() {
                         Rule::command_standalone => {
-                            comm.push(vec![pair_to_string(subcomponent)]);
+                            let cmd = pair_to_string(subcomponent);
+                            if cmd.trim().is_empty() {continue}
+                            comm.push(vec![CommandFragment::Command(cmd)]);
                         }
                         Rule::command_shorthand => {
-                            comm.push(parse_command_shorthand(subcomponent)?);
+                            comm.push(parse_command_shorthand(subcomponent)?.iter().map(|x|CommandFragment::Command(x.clone())).collect());
                         }
                         Rule::command_double_ampersand => {
                             if comm
                                 .last()
-                                .is_some_and(|last| last.len() == 1 && last[0] == "&&")
+                                .is_some_and(|last| last.len() == 1 && matches!(last[0], CommandFragment::Instruction(_)))
                             {
                                 continue;
                             }
-                            comm.push(vec![pair_to_string(subcomponent)]);
+                            let cmd = pair_to_string(subcomponent);
+                            if cmd.trim().is_empty() {continue}
+                            comm.push(vec![CommandFragment::Command(cmd)]);
                         }
                         Rule::enter_mode => {
+
+                            // Grammar guarrantees that if the last thing enountered was a command, it was '&&'
+                            if comm
+                                .last()
+                                .is_some_and(|last| last.len() == 1 && matches!(last[0], CommandFragment::Command(_)))
+                            {
+                                comm.pop();
+                            }
+
                             // Safety: the first element is guaranteed to be a modename
                             // by the grammar.
                             let modename = subcomponent.into_inner().next().unwrap();
-                            mode_enters.push(ModeInstruction::Enter(pair_to_string(modename)));
+                            comm.push(vec![CommandFragment::Instruction(Instruction::Enter(pair_to_string(modename)))]);
+
                         }
                         Rule::escape_mode => {
-                            if mode_enters.pop().is_none() {
-                                mode_escapes.push(ModeInstruction::Escape);
+
+                            if comm
+                                .last()
+                                .is_some_and(|last| last.len() == 1 && matches!(last[0], CommandFragment::Command(_)))
+                            {
+                                comm.pop();
                             }
+
+                            comm.push(vec![CommandFragment::Instruction(Instruction::Escape)]);
                         }
                         _ => {}
                     }
-                }
-
-                if comm
-                    .last()
-                    .is_some_and(|last| last.len() == 1 && last[0] == "&&")
-                {
-                    comm.pop();
                 }
             }
             _ => uncompiled.ingest(component)?,
@@ -320,8 +338,36 @@ fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
     let command_cartesian_product = comm
         .into_iter()
         .multi_cartesian_product()
-        .map(|c| c.join(""))
+        .map(|a|
+            {
+                let mut new : Vec<Instruction> = vec![];
+                let mut temp : String = String::new();
+                for f in a
+                {
+                    match f
+                    {
+                        CommandFragment::Command(ref str) => {
+                            temp.push_str(str)
+                        }
+                        CommandFragment::Instruction(ins) => {
+                            if !temp.is_empty()
+                            {
+                                new.push(Instruction::Exec(temp));
+                                temp = String::new();
+                            }
+                            new.push(ins)
+                        }
+                    }
+                }
+                if !temp.is_empty()
+                {
+                    new.push(Instruction::Exec(temp));
+                    temp = String::new();
+                }
+                return new
+            })
         .collect_vec();
+
     let bind_len = bind_cartesian_product.len();
     let command_len = command_cartesian_product.len();
 
@@ -341,14 +387,9 @@ fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
     let mut bindings: Vec<Binding> = bind_cartesian_product
         .into_iter()
         .zip(command_cartesian_product)
-        .map(|(definition, command)| Binding {
+        .map(|(definition, instructions)| Binding {
             definition,
-            command,
-            mode_instructions: mode_enters
-                .iter()
-                .chain(mode_escapes.iter())
-                .cloned()
-                .collect(),
+            instructions: instructions
         })
         .collect();
 

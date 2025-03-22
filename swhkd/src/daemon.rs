@@ -626,31 +626,32 @@ pub async fn send_command(
     tx: mpsc::Sender<String>,
 ) {
     log::info!("Hotkey pressed: {:#?}", hotkey);
-    let mut command = hotkey.command;
     if modes[*mode_stack.last().unwrap()].options.oneoff {
         mode_stack.pop();
     }
-    for mode in hotkey.mode_instructions.iter() {
+    for mode in hotkey.instructions.iter() {
         match mode {
-            sweet::ModeInstruction::Enter(name) => {
+            sweet::Instruction::Exec(cmd) => {
+                let mut command = cmd.clone();
+                if command.ends_with(" &&") {
+                    command = command.strip_suffix(" &&").unwrap().to_string();
+                }
+                match tx.send(command.clone()).await {
+                    Ok(_) => {},
+                    Err(e) => {
+                        log::error!("Failed to send command: {}", e);
+                    }
+                }
+            }
+            sweet::Instruction::Enter(name) => {
                 if let Some(mode_index) = modes.iter().position(|modename| modename.name.eq(name)) {
                     mode_stack.push(mode_index);
                     log::info!("Entering mode: {}", name);
                 }
             }
-            sweet::ModeInstruction::Escape => {
+            sweet::Instruction::Escape => {
                 mode_stack.pop();
             }
-        }
-    }
-    if command.ends_with(" &&") {
-        command = command.strip_suffix(" &&").unwrap().to_string();
-    }
-
-    match tx.send(command).await {
-        Ok(_) => {}
-        Err(e) => {
-            log::error!("Failed to send command: {}", e);
         }
     }
 }

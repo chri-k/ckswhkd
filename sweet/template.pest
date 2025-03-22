@@ -188,12 +188,12 @@ command_line          = _{ command_chunk_or_mode ~ (command_double_ampersand ~ c
 // multiline commands. ---------------------------------------------v
 command = ${ NEWLINE ~ WHITESPACE+ ~ command_line ~ (escape_lf ~ WHITESPACE+ ~ command_line)* }
 // For example
-// 
+//
 // hello \
 // world
-// 
+//
 // becomes "hello world"
-// 
+//
 // The dollar sign makes this atomic, this statement as well as anything
 // inside it must explicitly specify newlines and whitespaces.
 

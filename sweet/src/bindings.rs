@@ -1,12 +1,11 @@
 use std::fmt::Display;
 
-use crate::{Definition, ModeInstruction};
+use crate::{Definition, Instruction};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Binding {
     pub definition: Definition,
-    pub command: String,
-    pub mode_instructions: Vec<ModeInstruction>,
+    pub instructions: Vec<Instruction>,
 }
 
 impl Binding {
@@ -25,8 +24,7 @@ impl BindingBuilder {
     pub fn on(self, definition: Definition) -> Binding {
         Binding {
             definition,
-            command: self.command,
-            mode_instructions: vec![],
+            instructions: vec![],
         }
     }
 }
@@ -35,8 +33,8 @@ impl Display for Binding {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Binding {} \u{2192} {} (mode instructions: {:?})",
-            self.definition, self.command, self.mode_instructions
+            "Binding {} \u{2192} instructions: {:?}",
+            self.definition, self.instructions
         )
     }
 }
