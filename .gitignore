@@ -1,3 +1,9 @@
+# chri-k sometimes runs makepkg in ./contrib out of laziness::w
+contrib/ckswhkd/
+contrib/pkg
+contrib/src/*
+*.zst
+
 target
 *.zip
 *.gz
