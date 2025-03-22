@@ -248,7 +248,7 @@ fn mode_parser(pair: Pair<'_, Rule>) -> Result<Mode, ParseError> {
     let mut mode = Mode::default();
     for component in pair.into_inner() {
         match component.as_rule() {
-            Rule::modename => mode.name = component.as_str().to_string(),
+            Rule::modename => mode.name = component.as_str().trim().to_string(),
             Rule::binding => mode.bindings.extend(binding_parser(component)?),
             Rule::unbind => mode.unbinds.extend(unbind_parser(component)?),
             Rule::oneoff => mode.oneoff = true,
@@ -263,6 +263,7 @@ fn mode_parser(pair: Pair<'_, Rule>) -> Result<Mode, ParseError> {
 pub enum Instruction {
     Exec(String),
     Enter(String),
+    Await(String),
     Escape,
 }
 
@@ -315,7 +316,22 @@ fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
                             let modename = subcomponent.into_inner().next().unwrap();
                             comm.push(vec![CommandFragment::Instruction(Instruction::Enter(pair_to_string(modename)))]);
 
-                        }
+                        },
+                        Rule::await_mode =>
+                        {
+                            // Grammar guarrantees that if the last thing enountered was a command, it was '&&'
+                            if comm
+                                .last()
+                                .is_some_and(|last| last.len() == 1 && matches!(last[0], CommandFragment::Command(_)))
+                            {
+                                comm.pop();
+                            }
+
+                            // Safety: the first element is guaranteed to be a modename
+                            // by the grammar.
+                            let modename = subcomponent.into_inner().next().unwrap();
+                            comm.push(vec![CommandFragment::Instruction(Instruction::Await(pair_to_string(modename)))]);
+                        },
                         Rule::escape_mode => {
 
                             if comm
@@ -326,7 +342,7 @@ fn binding_parser(pair: Pair<'_, Rule>) -> Result<Vec<Binding>, ParseError> {
                             }
 
                             comm.push(vec![CommandFragment::Instruction(Instruction::Escape)]);
-                        }
+                        },
                         _ => {}
                     }
                 }

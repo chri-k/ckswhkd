@@ -179,8 +179,9 @@ command_double_ampersand = { "&&" }
 command_standalone    =  { (!shorthand_bounds ~ !command_double_ampersand ~ not_newline)+ }
 command_chunk         = _{ command_shorthand | command_standalone }
 enter_mode            =  { "@enter" ~ WHITESPACE ~ modename }
+await_mode            =  { "@await" ~ WHITESPACE ~ modename }
 escape_mode           =  { "@escape" }
-mode_instruction      = _{ WHITESPACE? ~ (enter_mode | escape_mode) ~ WHITESPACE? }
+mode_instruction      = _{ WHITESPACE? ~ (enter_mode | escape_mode | await_mode) ~ WHITESPACE? }
 command_chunk_or_mode = _{ mode_instruction | (command_chunk*) }
 command_line          = _{ command_chunk_or_mode ~ (command_double_ampersand ~ command_chunk_or_mode)* }
 

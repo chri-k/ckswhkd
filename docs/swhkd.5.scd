@@ -95,7 +95,7 @@ any + print # any represent at least one of the valid modifiers
 super + m
 	# commands starting with @ are internal commands.
 	# internal commands can be combined with normal commands with '&&'.
-	# '@enter' pushes a mode into the mode stack and starts listening only the
+	# '@enter' pushes a mode into the mode stack and starts listening to only the
 	# key bindings defined in that mode
 	@enter music && echo "music" > ~/.config/waybar/swhkd-mode
 
@@ -118,6 +118,19 @@ a
 b
 	@escape # escaping in a 'oneoff' mode pops two modes out of the mode stack.
 endmode
+
+# @await is similar to @enter, however any commands following @await are executed only after the mode is exited (be it because of @escape or because of oneoff).
+alt + 3
+	dunstify "entering mode test" && @await test && dunstify "exited mode test"
+mode test oneoff
+t
+	dunstify "doing something in mode test"
+endmode
+
+# anything after @await will be executed immediately after an @escape, with anything after that @escape being executed only after everything after the @await.
+# this can be used to create extremely complicated behaviour.
+
+# note however that shell commands are executed asyncrhonously, which means that even though they are sent in order, their execution will likely overlap.
 
 ```
 # AUTHORS

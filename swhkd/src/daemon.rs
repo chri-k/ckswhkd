@@ -8,6 +8,7 @@ use nix::{
 };
 use signal_hook::consts::signal::*;
 use signal_hook_tokio::Signals;
+use sweet::Instruction;
 use std::{
     collections::{HashMap, HashSet},
     env,
@@ -259,7 +260,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     let mut modes = load_config();
-    let mut mode_stack: Vec<usize> = vec![0];
+    let mut mode_stack: Vec<(usize, Vec<Instruction>)> = vec![(0, vec![])];
     let arg_add_devices = args.device;
     let arg_ignore_devices = args.ignoredevice;
 
@@ -380,7 +381,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
                     SIGHUP => {
                         modes = load_config();
-                        mode_stack = vec![0];
+                        mode_stack = vec![(0, vec![])];
                     }
 
                     SIGINT => {
@@ -501,11 +502,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     _ => {}
                 }
 
-                let possible_hotkeys: Vec<&config::Hotkey> = modes[mode_stack[mode_stack.len() - 1]].hotkeys.iter()
+                let possible_hotkeys: Vec<&config::Hotkey> = modes[mode_stack[mode_stack.len() - 1].0].hotkeys.iter()
                     .filter(|hotkey| hotkey.modifiers().len() == keyboard_state.state_modifiers.len())
                     .collect();
 
-                let event_in_hotkeys = modes[mode_stack[mode_stack.len() - 1]].hotkeys.iter().any(|hotkey| {
+                let event_in_hotkeys = modes[mode_stack[mode_stack.len() - 1].0].hotkeys.iter().any(|hotkey| {
                     hotkey.keysym().code() == event.code() &&
                         (!keyboard_state.state_modifiers.is_empty() && hotkey.modifiers().contains(&config::Modifier::Any) || keyboard_state.state_modifiers
                         .iter()
@@ -515,7 +516,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         });
 
                 // Only emit event to virtual device when swallow option is off
-                if !modes[mode_stack[mode_stack.len()-1]].options.swallow
+                if !modes[mode_stack[mode_stack.len()-1].0].options.swallow
                 // Don't emit event to virtual device if it's from a valid hotkey
                 && !event_in_hotkeys {
                     uinput_device.emit(&[event]).unwrap();
@@ -622,36 +623,88 @@ pub fn setup_swhkd(invoking_uid: u32, runtime_path: PathBuf) {
 pub async fn send_command(
     hotkey: Hotkey,
     modes: &[config::Mode],
-    mode_stack: &mut Vec<usize>,
+    mode_stack: &mut Vec<(usize, Vec<Instruction>)>,
     tx: mpsc::Sender<String>,
 ) {
     log::info!("Hotkey pressed: {:#?}", hotkey);
-    if modes[*mode_stack.last().unwrap()].options.oneoff {
+
+    let mode = mode_stack.last().unwrap().clone();
+
+    let mut instructions = hotkey.instructions;
+    let mut new_instructions = vec![];
+
+    if modes[mode.0].options.oneoff {
         mode_stack.pop();
+        log::info!("Exiting one-off mode: {}", modes[mode.0].name);
+        if !mode.1.is_empty()
+        {
+            new_instructions = mode.1;
+        }
     }
-    for mode in hotkey.instructions.iter() {
-        match mode {
-            sweet::Instruction::Exec(cmd) => {
-                let mut command = cmd.clone();
-                if command.ends_with(" &&") {
-                    command = command.strip_suffix(" &&").unwrap().to_string();
+
+    log::info!("modes {:?}", modes);
+
+    loop
+    {
+        'this_is_not_the_way_to_do_this: for (index, ins) in instructions.iter().enumerate() {
+            match ins {
+                sweet::Instruction::Exec(cmd) => {
+                    let mut command = cmd.clone();
+                    if command.ends_with(" &&") {
+                        command = command.strip_suffix(" &&").unwrap().to_string();
+                    }
+                    match tx.send(command.clone()).await {
+                        Ok(_) =>
+                        {
+                            log::info!("Sent command: {}", command);
+                        },
+                        Err(e) => {
+                            log::error!("Failed to send command: {}", e);
+                        }
+                    }
                 }
-                match tx.send(command.clone()).await {
-                    Ok(_) => {},
-                    Err(e) => {
-                        log::error!("Failed to send command: {}", e);
+                sweet::Instruction::Enter(name) => {
+                    if let Some(mode_index) = modes.iter().position(|modename| modename.name.eq(name)) {
+                        log::info!("Entering mode: {}", name);
+                        mode_stack.push((mode_index, vec![]));
+                    }
+                }
+                sweet::Instruction::Await(name) => {
+                    if let Some(mode_index) = modes.iter().position(|modename| modename.name.eq(name)) {
+                        let leftover = instructions.iter().skip(index+1).map(|x|x.clone()).collect();
+                        log::info!("Entering mode: {}; then executing: {:?}", name, leftover);
+                        mode_stack.push((mode_index, leftover));
+                        break 'this_is_not_the_way_to_do_this;
+                    }
+                }
+                sweet::Instruction::Escape => {
+                    if mode_stack.len() > 1
+                    {
+                        let old = mode_stack.pop().unwrap();
+                        log::info!("Escaping mode: {}", modes[old.0].name);
+                        if !old.1.is_empty()
+                        {
+                            let len = new_instructions.len();
+                            new_instructions.append(&mut instructions);
+                            new_instructions.splice(len..len+index+1, old.1);
+                            break 'this_is_not_the_way_to_do_this;
+                        }
+                    }
+                    else
+                    {
+                        log::info!("Ignoring attept to escape default mode");
                     }
                 }
             }
-            sweet::Instruction::Enter(name) => {
-                if let Some(mode_index) = modes.iter().position(|modename| modename.name.eq(name)) {
-                    mode_stack.push(mode_index);
-                    log::info!("Entering mode: {}", name);
-                }
-            }
-            sweet::Instruction::Escape => {
-                mode_stack.pop();
-            }
+        }
+
+        if new_instructions.is_empty()
+        {
+            break
+        } else
+        {
+            instructions = new_instructions;
+            new_instructions = vec![];
         }
     }
 }
