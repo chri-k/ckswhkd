@@ -3,26 +3,6 @@
 version = 4
 
 [[package]]
-name = "Simple-Wayland-HotKey-Daemon"
-version = "1.3.0-dev"
-dependencies = [
- "clap",
- "env_logger",
- "evdev",
- "flate2",
- "itertools 0.10.5",
- "log",
- "nix",
- "signal-hook",
- "signal-hook-tokio",
- "sweet",
- "sysinfo",
- "tokio",
- "tokio-stream",
- "tokio-udev",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -187,6 +167,37 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "ckswhkd"
+version = "1.3.1-dev"
+dependencies = [
+ "clap",
+ "env_logger",
+ "evdev",
+ "flate2",
+ "itertools 0.10.5",
+ "log",
+ "nix",
+ "signal-hook",
+ "signal-hook-tokio",
+ "sweet",
+ "sysinfo",
+ "tokio",
+ "tokio-stream",
+ "tokio-udev",
+]
+
+[[package]]
+name = "ckswhks"
+version = "1.3.1-dev"
+dependencies = [
+ "clap",
+ "env_logger",
+ "log",
+ "nix",
+ "sysinfo",
+]
 
 [[package]]
 name = "clap"
@@ -833,17 +844,6 @@ dependencies = [
  "pest_derive",
  "tempfile",
  "thiserror 1.0.69",
-]
-
-[[package]]
-name = "swhks"
-version = "1.3.0-dev"
-dependencies = [
- "clap",
- "env_logger",
- "log",
- "nix",
- "sysinfo",
 ]
 
 [[package]]

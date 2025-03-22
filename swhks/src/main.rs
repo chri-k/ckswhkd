@@ -28,10 +28,10 @@ struct Args {
 fn main() -> std::io::Result<()> {
     let args = Args::parse();
     if args.debug {
-        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("swhks=trace"))
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("ckswhks=trace"))
             .init();
     } else {
-        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("swhks=warn"))
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("ckswhks=warn"))
             .init();
     }
 
@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
 
     let (_pid_file_path, sock_file_path) = get_file_paths(&runtime_dir);
 
-    log::info!("Started SWHKS placeholder server");
+    log::info!("Started ckswhks placeholder server");
 
     // Daemonize the process
     let _ = nix::unistd::daemon(true, false);
@@ -72,7 +72,7 @@ pub fn setup_swhks(invoking_uid: u32, runtime_path: PathBuf) {
     }
 
     // Get the PID file path for instance tracking.
-    let pidfile: String = format!("{}/swhks_{}.pid", runtime_path.to_string_lossy(), invoking_uid);
+    let pidfile: String = format!("{}/ckswhks_{}.pid", runtime_path.to_string_lossy(), invoking_uid);
     if Path::new(&pidfile).exists() {
         log::trace!("Reading {} file and checking for running instances.", pidfile);
         let swhks_pid = match fs::read_to_string(&pidfile) {
@@ -89,7 +89,7 @@ pub fn setup_swhks(invoking_uid: u32, runtime_path: PathBuf) {
         sys.refresh_all();
         for (pid, process) in sys.processes() {
             if pid.to_string() == swhks_pid && process.exe() == env::current_exe().unwrap() {
-                log::error!("Swhks is already running!");
+                log::error!("ckswhks is already running!");
                 log::error!("There is no need to run another instance since there is already one running with PID: {}", swhks_pid);
                 exit(1);
             }
@@ -107,8 +107,8 @@ pub fn setup_swhks(invoking_uid: u32, runtime_path: PathBuf) {
 }
 
 fn get_file_paths(runtime_dir: &str) -> (String, String) {
-    let pid_file_path = format!("{}/swhks.pid", runtime_dir);
-    let sock_file_path = format!("{}/swhkd.sock", runtime_dir);
+    let pid_file_path = format!("{}/ckswhks.pid", runtime_dir);
+    let sock_file_path = format!("{}/ckswhkd.sock", runtime_dir);
 
     (pid_file_path, sock_file_path)
 }

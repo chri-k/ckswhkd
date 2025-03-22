@@ -14,7 +14,7 @@ I'm again borrowing these from [Facebook's Guidelines](https://github.com/facebo
 * You can run `make check` for style unification.
 
 ## Proper Commit Messages
-Make sure to write proper commit messages. 
+Make sure to write proper commit messages.
 
 Example: `[refactor] daemon.rs, simpler IPC implementation`.
 

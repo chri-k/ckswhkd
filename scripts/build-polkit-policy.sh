@@ -4,10 +4,10 @@
 # Defaults
 ###############
 
-readonly DEFAULT_SWHKD_PATH="/usr/bin/swhkd"
-readonly DEFAULT_POLICY_PATH="com.github.swhkd.pkexec.policy"
+readonly DEFAULT_SWHKD_PATH="/usr/bin/ckswhkd"
+readonly DEFAULT_POLICY_PATH="com.github.ckswhkd.pkexec.policy"
 readonly DEFAULT_MESSAGE="Authentication is required to run Simple Wayland Hotkey Daemon"
-readonly DEFAULT_ACTION_ID="com.github.swhkd.pkexec"
+readonly DEFAULT_ACTION_ID="com.github.ckswhkd.pkexec"
 
 ###############
 # Init
@@ -15,12 +15,12 @@ readonly DEFAULT_ACTION_ID="com.github.swhkd.pkexec"
 
 print_help() {
     printf "Usage: build-polkit-policy [OPTIONS]\n\n"
-    printf "Generates a polkit policy file for swhkd.\n\n"
+    printf "Generates a polkit policy file for ckswhkd.\n\n"
     printf "Optional Arguments:\n"
     printf " --policy-path=<path> Path to save the policy file to.\n"
     printf "                      If set to '-', this tool will output to stdout instead.\n"
     printf "                      Defaults to '%s'.\n" "${DEFAULT_POLICY_PATH}"
-    printf " --swhkd-path=<path>  Path to the swhkd binary when installed.\n"
+    printf " --ckswhkd-path=<path>  Path to the ckswhkd binary when installed.\n"
     printf "                      Defaults to '%s'.\n" "${DEFAULT_SWHKD_PATH}"
     printf " --action-id=<id>     Polkit action id to use.\n"
     printf "                      Defaults to '%s'.\n" "${DEFAULT_ACTION_ID}"
@@ -35,7 +35,7 @@ while [ -n "$1" ]; do
             POLICY_PATH=${1#*=}
             shift
             ;;
-        --swhkd-path=*)
+        --ckswhkd-path=*)
             SWHKD_PATH=${1#*=}
             shift
             ;;

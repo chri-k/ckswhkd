@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-killall swhks
+killall ckswhks
 
-swhks & pkexec swhkd
+ckswhks & sudo ckswhkd

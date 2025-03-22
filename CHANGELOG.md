@@ -3,9 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (debatable)
 
-## Unreleased
+## 1.3.1
+
+### Added
+
+- `@await` internal command. like `@enter` but postpones following commands until after the mode is popped.
+- `--ignore-devices` flag to manually tell it to not touch specific device files
+
+### Fixed
+- removed `rfkill` functionality which was causing issues on some distros and probably breaking compatibility with others in the process.
+
+## swhkd
+
+this is the content of CHANGELOG.md at the time of the fork, it not appear to correspond to any particular version of swhkd
 
 ### Added
 

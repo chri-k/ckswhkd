@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: swhkd bugs
+about: ckswhkd bugs
 title: ""
 labels: bug
 assignees: angelofallars, Shinyzenith, EdenQwQ
@@ -9,7 +9,7 @@ assignees: angelofallars, Shinyzenith, EdenQwQ
 **Version Information:**
 
 - Distribution Information ( run `uname -a` )
-- swhkd version ( `swhkd -V` )
+- ckswhkd version ( `ckswhkd -V` )
 
 **Describe the bug:**
 A clear and concise description of what the bug is.

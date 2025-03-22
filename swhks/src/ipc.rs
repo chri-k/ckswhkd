@@ -39,9 +39,9 @@ pub fn server_loop(sock_file_path: &str) -> std::io::Result<()> {
                 // the hash of the environment variables is sent back to the client
                 // then the stream is flushed and the loop continues
                 if buff == [1] {
-                    log::debug!("Received VERIFY message from swhkd");
+                    log::debug!("Received VERIFY message from ckswhkd");
                     let _ = stream.write_all(prev_hash.to_string().as_bytes());
-                    log::debug!("Sent hash to swhkd");
+                    log::debug!("Sent hash to ckswhkd");
                     stream.flush()?;
                     continue;
                 }
@@ -49,7 +49,7 @@ pub fn server_loop(sock_file_path: &str) -> std::io::Result<()> {
                 // the environment variables are sent back to the client
                 // then the stream is flushed and the loop continues
                 if buff == [2] {
-                    log::debug!("Received GET message from swhkd");
+                    log::debug!("Received GET message from ckswhkd");
                     let env = get_env().unwrap();
                     if prev_hash == calculate_hash(env.clone()) {
                         log::debug!("No changes in environment variables");

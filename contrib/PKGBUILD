@@ -2,12 +2,12 @@
 # Contributor: Sergey A. <murlakatamenka@disroot.org>
 # Contributor: rv178 <idliyout@gmail.com>
 
-_pkgname="swhkd"
+_pkgname="ckswhkd"
 pkgname="${_pkgname}-git"
 pkgver=1.2.1.r17.g022466e
 pkgrel=1
 arch=("x86_64")
-url="https://github.com/waycrate/swhkd"
+url="https://github.com/chri-k/ckswhkd"
 pkgdesc="A display server independent hotkey daemon inspired by sxhkd."
 license=("BSD")
 depends=("polkit")

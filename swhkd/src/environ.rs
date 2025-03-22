@@ -44,7 +44,7 @@ impl Env {
         .to_string();
         let xdg_config_home = self.pairs.get("XDG_CONFIG_HOME").unwrap_or(&default);
 
-        PathBuf::from(xdg_config_home).join("swhkd").join("swhkdrc")
+        PathBuf::from(xdg_config_home).join("ckswhkd").join("ckswhkdrc")
     }
 
     pub fn fetch_xdg_data_path(&self) -> PathBuf {

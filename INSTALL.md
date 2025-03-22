@@ -1,10 +1,10 @@
 # AUR:
 
-We have packaged `swhkd-git`. `swhkd-bin` has been packaged separately by a user of swhkd.
+chri-k might make an AUR package of this fork.
 
 # Building:
 
-`swhkd` and `swhks` install to `/usr/local/bin/` by default. You can change this behaviour by editing the [Makefile](../Makefile) variable, `DESTDIR`, which acts as a prefix for all installed files. You can also specify it in the make command line, e.g. to install everything in `subdir`: `make DESTDIR="subdir" install`.
+`ckswhkd` and `ckswhks` install to `/usr/local/bin/` by default. You can change this behaviour by editing the [Makefile](../Makefile) variable, `DESTDIR`, which acts as a prefix for all installed files. You can also specify it in the make command line, e.g. to install everything in `subdir`: `make DESTDIR="subdir" install`.
 
 # Dependencies:
 
@@ -23,7 +23,7 @@ We have packaged `swhkd-git`. `swhkd-bin` has been packaged separately by a user
 
 # Compiling:
 
--   `git clone https://github.com/waycrate/swhkd;cd swhkd`
+-   `git clone https://github.com/chri-k/ckswhkd ; cd ckswhkd`
 -   `make setup`
 -   `make clean`
 -   `make`
@@ -31,4 +31,4 @@ We have packaged `swhkd-git`. `swhkd-bin` has been packaged separately by a user
 
 # Running:
 
-Refer [Running section](https://github.com/waycrate/swhkd#running)
+Refer to [Running section](https://github.com/chri-k/ckswhkd#running)

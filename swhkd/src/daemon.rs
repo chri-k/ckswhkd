@@ -67,7 +67,7 @@ struct Args {
     #[arg(short = 'I', long, num_args = 0.., value_delimiter = ' ')]
     ignoredevice: Vec<String>,
 
-    /// Set a custom log file. (Defaults to ${XDG_DATA_HOME:-$HOME/.local/share}/swhks-current_unix_time.log)
+    /// Set a custom log file. (Defaults to ${XDG_DATA_HOME:-$HOME/.local/share}/ckswhks-current_unix_time.log)
     #[arg(short, long, value_name = "FILE")]
     log: Option<PathBuf>,
 }
@@ -75,10 +75,10 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    env::set_var("RUST_LOG", "swhkd=warn");
+    env::set_var("RUST_LOG", "ckswhkd=warn");
 
     if args.debug {
-        env::set_var("RUST_LOG", "swhkd=trace");
+        env::set_var("RUST_LOG", "ckswhkd=trace");
     }
 
     env_logger::init();
@@ -126,7 +126,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
         };
 
-        format!("{}/swhkd/swhkd-{}.log", env.fetch_xdg_data_path().to_string_lossy(), time).into()
+        format!("{}/ckswhkd/ckswhkd-{}.log", env.fetch_xdg_data_path().to_string_lossy(), time).into()
     };
 
     let log_path = PathBuf::from(&log_file_name);
@@ -554,7 +554,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 pub fn check_device_is_keyboard(device: &Device) -> bool {
     if device.supported_keys().map_or(false, |keys| keys.contains(Key::KEY_ENTER)) {
-        if device.name() == Some("swhkd virtual output") {
+        if device.name() == Some("ckswhkd virtual output") {
             return false;
         }
         log::debug!("Keyboard: {}", device.name().unwrap(),);
@@ -585,7 +585,7 @@ pub fn setup_swhkd(invoking_uid: u32, runtime_path: PathBuf) {
     }
 
     // Get the PID file path for instance tracking.
-    let pidfile: String = format!("{}/swhkd_{}.pid", runtime_path.to_string_lossy(), invoking_uid);
+    let pidfile: String = format!("{}/ckswhkd_{}.pid", runtime_path.to_string_lossy(), invoking_uid);
     if Path::new(&pidfile).exists() {
         log::trace!("Reading {} file and checking for running instances.", pidfile);
         let swhkd_pid = match fs::read_to_string(&pidfile) {
@@ -597,14 +597,14 @@ pub fn setup_swhkd(invoking_uid: u32, runtime_path: PathBuf) {
         };
         log::debug!("Previous PID: {}", swhkd_pid);
 
-        // Check if swhkd is already running!
+        // Check if ckswhkd is already running!
         let mut sys = System::new_all();
         sys.refresh_all();
         for (pid, process) in sys.processes() {
             if pid.to_string() == swhkd_pid && process.exe() == env::current_exe().unwrap() {
-                log::error!("Swhkd is already running!");
-                log::error!("pid of existing swhkd process: {}", pid.to_string());
-                log::error!("To close the existing swhkd process, run `sudo killall swhkd`");
+                log::error!("ckswhkd is already running!");
+                log::error!("pid of existing ckswhkd process: {}", pid.to_string());
+                log::error!("To close the existing ckswhkd process, run `sudo killall ckswhkd`");
                 exit(1);
             }
         }
@@ -717,8 +717,8 @@ fn get_uid() -> Result<u32, Box<dyn Error>> {
 }
 
 fn get_file_paths(runtime_dir: &str) -> (String, String) {
-    let pid_file_path = format!("{}/swhks.pid", runtime_dir);
-    let sock_file_path = format!("{}/swhkd.sock", runtime_dir);
+    let pid_file_path = format!("{}/ckswhks.pid", runtime_dir);
+    let sock_file_path = format!("{}/ckswhkd.sock", runtime_dir);
 
     (pid_file_path, sock_file_path)
 }

@@ -1,8 +1,8 @@
 # Destination dir, defaults to root. Should be overridden for packaging
 # e.g. make DESTDIR="packaging_subdir" install
 DESTDIR ?= "/"
-DAEMON_BINARY := swhkd
-SERVER_BINARY := swhks
+DAEMON_BINARY := ckswhkd
+SERVER_BINARY := ckswhks
 BUILDFLAGS := --release
 TARGET_DIR := /usr/bin
 MAN1_DIR := /usr/share/man/man1
@@ -30,8 +30,8 @@ install:
 	fi
 
 uninstall:
-	@$(RM) -f /usr/share/man/**/swhkd.*
-	@$(RM) -f /usr/share/man/**/swhks.*
+	@$(RM) -f /usr/share/man/**/ckswhkd.*
+	@$(RM) -f /usr/share/man/**/ckswhks.*
 	@$(RM) $(TARGET_DIR)/$(SERVER_BINARY)
 	@$(RM) $(TARGET_DIR)/$(DAEMON_BINARY)
 
@@ -43,7 +43,7 @@ check:
 release:
 	@$(RM) -f Cargo.lock
 	@$(MAKE) -s
-	@zip -r "glibc-x86_64-$(VERSION).zip" ./target/release/swhkd ./target/release/swhks
+	@zip -r "glibc-x86_64-$(VERSION).zip" ./target/release/ckswhkd ./target/release/ckswhks
 
 test:
 	@cargo test
