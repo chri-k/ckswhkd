@@ -634,19 +634,15 @@ pub async fn send_command(
     let mut new_instructions = vec![];
 
     if modes[mode.0].options.oneoff {
-        mode_stack.pop();
-        log::info!("Exiting one-off mode: {}", modes[mode.0].name);
-        if !mode.1.is_empty()
-        {
-            new_instructions = mode.1;
-        }
+        log::info!("Will exit one-off mode: {}", modes[mode.0].name);
+        instructions.push(Instruction::Escape);
     }
 
     log::info!("modes {:?}", modes);
 
     loop
     {
-        'this_is_not_the_way_to_do_this: for (index, ins) in instructions.iter().enumerate() {
+        'execution: for (index, ins) in instructions.iter().enumerate() {
             match ins {
                 sweet::Instruction::Exec(cmd) => {
                     let mut command = cmd.clone();
@@ -674,7 +670,7 @@ pub async fn send_command(
                         let leftover = instructions.iter().skip(index+1).map(|x|x.clone()).collect();
                         log::info!("Entering mode: {}; then executing: {:?}", name, leftover);
                         mode_stack.push((mode_index, leftover));
-                        break 'this_is_not_the_way_to_do_this;
+                        break 'execution;
                     }
                 }
                 sweet::Instruction::Escape => {
@@ -687,7 +683,7 @@ pub async fn send_command(
                             let len = new_instructions.len();
                             new_instructions.append(&mut instructions);
                             new_instructions.splice(len..len+index+1, old.1);
-                            break 'this_is_not_the_way_to_do_this;
+                            break 'execution;
                         }
                     }
                     else
