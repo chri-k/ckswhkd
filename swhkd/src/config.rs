@@ -152,6 +152,7 @@ impl Default for Mode {
 pub struct ModeOptions {
     pub swallow: bool,
     pub oneoff: bool,
+    pub chain: bool,
 }
 
 pub fn parse_contents(contents: SwhkdParser) -> Result<Vec<Mode>, ParseError> {
@@ -169,9 +170,9 @@ pub fn parse_contents(contents: SwhkdParser) -> Result<Vec<Mode>, ParseError> {
 
     let mut modes = vec![default_mode];
 
-    for sweet::Mode { name, oneoff, swallow, bindings, unbinds } in contents.modes {
+    for sweet::Mode { name, chain, oneoff, swallow, bindings, unbinds } in contents.modes {
         let mut pushmode =
-            Mode { name, options: ModeOptions { swallow, oneoff }, ..Default::default() };
+            Mode { name, options: ModeOptions { swallow, oneoff, chain }, ..Default::default() };
         for binding in bindings {
             let hotkey = Hotkey {
                 keybinding: sweet_def_to_kb(&binding.definition),

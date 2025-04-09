@@ -1,6 +1,7 @@
 use crate::config::Value;
 use clap::Parser;
 use config::Hotkey;
+use config::KeyBinding;
 use evdev::{AttributeSet, Device, InputEventKind, Key};
 use nix::{
     sys::stat::{umask, Mode},
@@ -520,6 +521,28 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 // Don't emit event to virtual device if it's from a valid hotkey
                 && !event_in_hotkeys {
                     uinput_device.emit(&[event]).unwrap();
+                }
+
+                // if chain option is set, pressing an un-bound non-modifier key will send an empty hotkey,
+                // triggering a mode exit.
+                // sending an empty hotkey instead of just popping the mode stack is necessary to account for @await
+                // XXX: this is using oneoff option temporarily
+                if modes[mode_stack[mode_stack.len()-1].0].options.oneoff
+                && !event_in_hotkeys
+                && event.value() == 1
+                && modifiers_map.get(&key).is_none() {
+                    let empty_hotkey = Hotkey {
+                        keybinding: KeyBinding {
+                            keysym: evdev::Key(0),
+                        modifiers: vec![],
+                        on_release: false,
+                        send: false,
+                    },
+                        instructions: vec![]
+                    };
+                    log::debug!("chain did not continue, processing empty hotkey");
+                    send_command(empty_hotkey, &modes, &mut mode_stack, tx.clone()).await;
+                            continue;
                 }
 
                 if execution_is_paused || possible_hotkeys.is_empty() || last_hotkey.is_some() {

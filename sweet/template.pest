@@ -211,13 +211,14 @@ unbind = { "ignore" ~ trigger }
 import_file = { (!NEWLINE ~ ANY)+ }
 import      = { "include" ~ import_file }
 
+chain               =  { "chain" }
 oneoff              =  { "oneoff" }
 swallow             =  { "swallow" }
-modename_characters = _{ !NEWLINE ~ !(oneoff | swallow | command_double_ampersand) ~ !WHITESPACE ~ ANY }
+modename_characters = _{ !NEWLINE ~ !(chain | oneoff | swallow | command_double_ampersand) ~ !WHITESPACE ~ ANY }
 modename            =  { modename_characters+ }
 primitives          = _{ comment | unbind | binding }
 
-mode = { "mode" ~ modename ~ oneoff? ~ swallow? ~ comment? ~ NEWLINE ~ WHITESPACE* ~ (primitives ~ NEWLINE+ ~ WHITESPACE*)+ ~ "endmode" }
+mode = { "mode" ~ modename ~ chain? ~ oneoff? ~ swallow? ~ comment? ~ NEWLINE ~ WHITESPACE* ~ (primitives ~ NEWLINE+ ~ WHITESPACE*)+ ~ "endmode" }
 
 content = _{ comment | mode | unbind | binding | import | NEWLINE }
 

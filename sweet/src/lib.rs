@@ -43,6 +43,7 @@ pub struct Mode {
     pub name: String,
     pub oneoff: bool,
     pub swallow: bool,
+    pub chain: bool,
     pub bindings: Vec<Binding>,
     pub unbinds: Vec<Definition>,
 }
@@ -252,6 +253,7 @@ fn mode_parser(pair: Pair<'_, Rule>) -> Result<Mode, ParseError> {
             Rule::binding => mode.bindings.extend(binding_parser(component)?),
             Rule::unbind => mode.unbinds.extend(unbind_parser(component)?),
             Rule::oneoff => mode.oneoff = true,
+            Rule::chain => {mode.oneoff = true; mode.chain = true},
             Rule::swallow => mode.swallow = true,
             _ => {}
         }
